@@ -1,0 +1,7 @@
+boto3<2.0.0
+requests
+# git+https://github.com/kylelaker/updatechecker@main#egg=updatechecker
+
+# Vendor deps
+beautifulsoup4
+requests
