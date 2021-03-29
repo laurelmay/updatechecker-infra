@@ -19,6 +19,10 @@ This can be done with something like:
    $ npm install -g aws-cdk
    $ pip install -U chalice
 
+Since the ``updatechecker`` package is only available as a source archive (not a
+source or binary distribution), it has to be vendored. The vendor directory is
+ignored by ``git`` but can be loaded by running ``./fetch_vendor.sh``.
+
 Then, within the ``infrastructure`` directory run ``cdk bootstrap && cdk deploy``.
 
 The API
