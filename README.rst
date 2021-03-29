@@ -1,56 +1,43 @@
-REST API backed by Amazon DynamoDB
+``updatechecker`` Infrastructure
 ==================================
 
-This template provides a REST API that's backed by an Amazon DynamoDB table.
-This application is deployed using the AWS CDK.
+Deploys `updatechecker`_ to AWS using Chalice and the CDK to provide an API
+and to send notifications when new versions are released. Version data is
+stored in DynamoDB and notifications are sent on changes to the latest
+version of any supported software.
 
-For more information, see the `Deploying with the AWS CDK
-<https://aws.github.io/chalice/tutorials/cdk.html>`__ tutorial.
+.. _updatechecker: https://github.com/kylelaker/updatechecker
 
+Deploying
+---------
 
-Quickstart
-----------
+To deploy the application ensure that the AWS CDK and Chalice are installed.
+This can be done with something like:
 
-First, you'll need to install the AWS CDK if you haven't already.
-The CDK requires Node.js and npm to run.
-See the `Getting started with the AWS CDK
-<https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html>`__ for
-more details.
+.. code-block:: shell
 
-::
+   $ npm install -g aws-cdk
+   $ pip install -U chalice
 
-  $ npm install -g aws-cdk
+Then, within the ``infrastructure`` directory run ``cdk bootstrap && cdk deploy``.
 
-Next you'll need to install the requirements for the project.
+The API
+-------
 
-::
+The API will be available at the URL in the output of the ``cdk deploy`` command. The
+key is ``updatecheckerv2.EndpointURL``.
 
-  $ pip install -r requirements.txt
-
-There's also separate requirements files in the ``infrastructure``
-and ``runtime`` directories if you'd prefer to have separate virtual
-environments for your CDK and Chalice app.
-
-To deploy the application, ``cd`` to the ``infrastructure`` directory.
-If this is you're first time using the CDK you'll need to bootstrap
-your environment.
-
-::
-
-  $ cdk bootstrap
-
-Then you can deploy your application using the CDK.
-
-::
-
-  $ cdk deploy
+Two routes are currently provided. ``/software`` provides a list of the IDs of all
+supported software. ``/software/{name}/{version}`` where ``{version}`` is usually
+``latest`` and ``{name}`` is one of the IDs will provide information about that
+version of the software, including the download URL, SHA1 hash, and the version
+string.
 
 
-Project layout
---------------
+Notifications
+-------------
 
-This project template combines a CDK application and a Chalice application.
-These correspond to the ``infrastructure`` and ``runtime`` directory
-respectively.  To run any CDK CLI commands, ensure you're in the
-``infrastructure`` directory, and to run any Chalice CLI commands ensure
-you're in the ``runtime`` directory.
+An SNS topic is created during the deployment. Subscribing to the topic will result in
+a notification each time the ``latest`` version of an application is created or
+updated. The format is intended for plain text email; it is not intended to be
+machine readable.
