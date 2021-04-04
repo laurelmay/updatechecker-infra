@@ -1,26 +1,90 @@
+import json
+import logging
+
 from datetime import date, datetime
+from typing import Any, Dict
+
 from botocore.exceptions import ClientError
 
-def get_software_version(table, name, version):
-    key = {
-        'PK': f'Software#{name}',
-        'SK': f'Version#{version}'
-    }
-    try:
-        item = table.get_item(Key=key)['Item']
-    except (ClientError, KeyError):
-        return None
-    del item['PK']
-    del item['SK']
+
+_LOGGER = logging.getLogger("updatecheckerv2")
+
+
+def primary_key(name: str) -> str:
+    """
+    Format the given software name as an app primary key.
+    """
+    return f"Software#{name}"
+
+
+def sort_key(version: str) -> str:
+    """
+    Format the given software version as an app sort key.
+    """
+    return f"Version#{version}"
+
+
+def process_item(item: Dict[str, Any]):
+    """
+    Process the given item appropriately so that it may be displayed to
+    a user.
+    """
+    del item["PK"]
+    del item["SK"]
     return item
 
+
+def get_software_version(table, name, version):
+    """
+    Get a specific version of the given software.
+    """
+    key = {"PK": primary_key(name), "SK": sort_key(version)}
+    try:
+        item = table.get_item(Key=key)["Item"]
+    except (ClientError, KeyError):
+        return None
+    process_item(item)
+    return item
+
+
+def get_all_versions(table, name):
+    """
+    Get a list of all actual versions of the given software.
+
+    The "latest" alias is not returned.
+    """
+    key_conditions = {
+        "PK": {"ComparisonOperator": "EQ", "AttributeValueList": [primary_key(name)]},
+    }
+    try:
+        response = table.query(KeyConditions=key_conditions)
+    except ClientError as client_err:
+        _LOGGER.error("Unable to complete query for %s", name, exc_info=client_err)
+        raise
+
+    items = [
+        process_item(item)
+        for item in response.get("Items", [])
+        if not item["SK"] == sort_key("latest")
+    ]
+    if not items:
+        _LOGGER.info(
+            "No items for query: %s. Response: %s",
+            json.dumps(key_conditions),
+            json.dumps(response, default=str),
+        )
+        return None
+
+    return items
+
+
 def set_version_data(table, data, version=None):
+    """
+    Update the table to add information about a particular version.
+    """
     if not version:
         version = data.latest_version
-    latest_key = {
-        'PK': f"Software#{data.short_name}",
-        'SK': f"Version#{version}"
-    }
+    latest_key = {"PK": primary_key(data.short_name), "SK": sort_key(version)}
     item = {
         ":i": data.short_name,
         ":n": data.name,
@@ -29,11 +93,7 @@ def set_version_data(table, data, version=None):
         ":s": data.sha1_hash,
         ":t": datetime.utcnow().isoformat(),
     }
-    name_transforms = {
-        "#n": "name",
-        "#u": "url",
-        "#t": "timestamp"
-    }
+    name_transforms = {"#n": "name", "#u": "url", "#t": "timestamp"}
     try:
         response = table.update_item(
             Key=latest_key,
@@ -41,16 +101,20 @@ def set_version_data(table, data, version=None):
             ExpressionAttributeValues=item,
             ExpressionAttributeNames=name_transforms,
             ConditionExpression=f"version <> :v OR #u <> :u OR sha1 <> :s",
-            ReturnValues="UPDATED_NEW"
+            ReturnValues="UPDATED_NEW",
         )
     except ClientError as e:
-        if 'ConditionalCheckFailedException' not in str(e):
+        if "ConditionalCheckFailedException" not in str(e):
             raise
         return None
 
     return response
 
+
 def send_update_message(topic, update):
+    """
+    Send a message about a software update to SNS.
+    """
     message_lines = [
         f"A new version of {update['name']['S']} is available:",
         f"    Version: {update['version']['S']}",
