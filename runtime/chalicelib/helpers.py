@@ -123,3 +123,17 @@ def send_update_message(topic, update):
     ]
     subject = f"{update['name']['S']} update available"
     topic.publish(Subject=subject, Message="\n".join(message_lines))
+
+
+def send_error_message(topic, software, error):
+    """
+    Send a message when an error occurs during an update.
+    """
+    message_lines = [
+        f"An error occurred checking for {software} updates.",
+        "",
+        "Error:",
+        f"{str(error)}",
+    ]
+    subject = f"Failed to check updates for {software}"
+    topic.publish(Subject=subject, Message="\n".join(message_lines))

@@ -66,8 +66,16 @@ def update_data(event):
     session.headers.update({"User-Agent": "Update checking tool"})
     data = []
     for _, checker in checkers.all_checkers().items():
-        data.append(checker({}, session, False))
-        data[-1].load()
+        try:
+            check = checker({}, session, False)
+            check.load()
+        except Exception as e:
+            app.log.exception(
+                "Error checking for %s", checker.name, exc_info=e
+            )
+            helpers.send_error_message(notify_topic, checker.name, e)
+        else:
+            data.append(check)
     for checked in data:
         updated = helpers.set_version_data(dynamodb_table, checked)
         if updated:
