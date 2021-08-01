@@ -11,13 +11,14 @@ from updatechecker import checkers
 from chalicelib import helpers
 
 app = Chalice(app_name="updatecheckerv2")
-dynamodb = boto3.resource("dynamodb")
-sns = boto3.resource("sns")
-dynamodb_table = dynamodb.Table(os.environ.get("APP_TABLE_NAME", ""))
+
+if 'AWS_CHALICE_CLI_MODE' not in os.environ:
+    dynamodb = boto3.resource("dynamodb")
+    sns = boto3.resource("sns")
+    dynamodb_table = dynamodb.Table(os.environ.get("APP_TABLE_NAME", ""))
+    notify_topic = sns.Topic(os.environ.get("NOTIFY_TOPIC", ""))
+
 dynamodb_stream = os.environ.get("APP_TABLE_STREAM", "")
-notify_topic = sns.Topic(os.environ.get("NOTIFY_TOPIC", ""))
-
-
 app.log.setLevel(logging.DEBUG)
 
 
