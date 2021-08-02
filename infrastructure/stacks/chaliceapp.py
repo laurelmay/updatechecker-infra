@@ -1,6 +1,7 @@
 import os
 
 from aws_cdk import aws_dynamodb as dynamodb, aws_sns as sns, core as cdk
+import chalice
 from chalice.cdk import Chalice
 
 
@@ -25,6 +26,7 @@ class ChaliceApp(cdk.Stack):
                     "NOTIFY_TOPIC": self.sns_topic.topic_arn,
                 },
                 "automatic_layer": True,
+                "lambda_memory_size": 384,
             },
         )
         self.dynamodb_table.grant_read_write_data(self.chalice.get_role("DefaultRole"))

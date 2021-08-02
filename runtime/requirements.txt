@@ -1,7 +1,6 @@
 boto3<2.0.0
-requests
+aiohttp
 # git+https://github.com/kylelaker/updatechecker@main#egg=updatechecker
 
 # Vendor deps
 beautifulsoup4
-requests

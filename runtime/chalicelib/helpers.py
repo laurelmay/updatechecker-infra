@@ -1,11 +1,14 @@
+import asyncio
 import json
 import logging
 
 from datetime import date, datetime
 from typing import Any, Dict
 
+import aiohttp
 from botocore.exceptions import ClientError
 
+from updatechecker import checkers
 
 _LOGGER = logging.getLogger("updatecheckerv2")
 
@@ -32,6 +35,26 @@ def process_item(item: Dict[str, Any]):
     del item["PK"]
     del item["SK"]
     return item
+
+
+async def refresh_data(table, error_topic, logger):
+    """
+    Update the cached data about software version.
+    """
+    headers = {"User-Agent": "Update Checker tool"}
+    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
+        checks = [checker(session, False) for _, checker in checkers.all_checkers().items()]
+        results = await asyncio.gather(*[checker.load() for checker in checks], return_exceptions=True)
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.exception(
+                    "Handled error checking for %s", checks[idx].name, exc_info=result
+                )
+                send_error_message(error_topic, checks[idx].name, result)
+                continue
+            updated = set_version_data(table, result)
+            if updated:
+                set_version_data(table, result, "latest")
 
 
 def get_software_version(table, name, version):

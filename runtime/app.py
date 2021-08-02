@@ -1,12 +1,11 @@
+import asyncio
 import json
 import logging
 import os
 
 import boto3
-import requests
 from chalice import Chalice, NotFoundError
 from chalice.app import Rate
-from updatechecker import checkers
 
 from chalicelib import helpers
 
@@ -57,29 +56,17 @@ def get_software_version(name, version):
     return item
 
 
-@app.schedule(Rate(2, Rate.HOURS))
+@app.route('/refresh', methods=["POST"], api_key_required=True)
+def refresh():
+    asyncio.run(helpers.refresh_data(dynamodb_table, notify_topic, app.log))
+
+
+@app.schedule(Rate(1, Rate.HOURS))
 def update_data(event):
     """
     Update the cached data about software version.
     """
-    session = requests.Session()
-    session.headers.update({"User-Agent": "Update checking tool"})
-    data = []
-    for _, checker in checkers.all_checkers().items():
-        try:
-            check = checker({}, session, False)
-            check.load()
-        except Exception as e:
-            app.log.exception(
-                "Error checking for %s", checker.name, exc_info=e
-            )
-            helpers.send_error_message(notify_topic, checker.name, e)
-        else:
-            data.append(check)
-    for checked in data:
-        updated = helpers.set_version_data(dynamodb_table, checked)
-        if updated:
-            helpers.set_version_data(dynamodb_table, checked, "latest")
+    asyncio.run(helpers.refresh_data(dynamodb_table, notify_topic, app.log))
 
 
 @app.on_dynamodb_record(dynamodb_stream)

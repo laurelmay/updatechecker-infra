@@ -23,6 +23,14 @@ Since the ``updatechecker`` package is only available as a source archive (not a
 source or binary distribution), it has to be vendored. The vendor directory is
 ignored by ``git`` but can be loaded by running ``./fetch_vendor.sh``.
 
+The following environment variables may need to be set in order to resolve packaging
+errors:
+
+.. code-block:: shell
+
+   $ export MULTIDICT_NO_EXTENSIONS=1
+   $ export YARL_NO_EXTENSIONS=1
+
 Then, within the ``infrastructure`` directory run ``cdk bootstrap && cdk deploy``.
 
 The API
