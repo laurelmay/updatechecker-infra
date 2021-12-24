@@ -42,6 +42,7 @@ class ChaliceApp(cdk.Stack):
             },
             "automatic_layer": True,
             "lambda_memory_size": 384,
+            "xray": True,
         }
         if domain_name:
             self.api_fqdn = f"updatechecker.{domain_name}"
