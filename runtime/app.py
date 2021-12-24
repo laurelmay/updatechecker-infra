@@ -6,12 +6,15 @@ import os
 import boto3
 from chalice import Chalice, NotFoundError
 from chalice.app import Rate
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.core import patch_all
 
 from chalicelib import helpers
 
 app = Chalice(app_name="updatecheckerv2")
 
 if 'AWS_CHALICE_CLI_MODE' not in os.environ:
+    patch_all()
     dynamodb = boto3.resource("dynamodb")
     sns = boto3.resource("sns")
     dynamodb_table = dynamodb.Table(os.environ.get("APP_TABLE_NAME", ""))

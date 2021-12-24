@@ -1,4 +1,5 @@
 boto3<2.0.0
+aws-xray-sdk
 aiohttp
 # git+https://github.com/kylelaker/updatechecker@main#egg=updatechecker
 
