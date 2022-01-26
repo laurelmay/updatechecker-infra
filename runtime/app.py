@@ -33,7 +33,13 @@ def list_software():
     API calls for version information.
     """
     full_data = dynamodb_table.scan()["Items"]
-    software_list = list(set([item["id"] for item in full_data]))
+    software_summaries = {item["id"]: item["name"] for item in full_data}
+    software_list = [{"id": key, "name": value, "versions": []} for key, value in software_summaries.items()]
+    for software in full_data:
+        software_key = [item for item in software_list if item["id"] == software["id"]][0]
+        if software["SK"] != "Version#latest":
+            software_key["versions"].append(software["version"])
+    software_list.sort(key=lambda item: item["id"])
     return {"software": software_list}
 
 
