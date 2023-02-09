@@ -1,13 +1,12 @@
 import os
 
-from aws_cdk import (
-    aws_certificatemanager as acm,
-    aws_apigateway as apigw,
-    aws_dynamodb as dynamodb,
-    aws_route53 as dns,
-    aws_sns as sns,
-    core as cdk,
-)
+import aws_cdk as cdk
+import aws_cdk.aws_certificatemanager as acm
+import aws_cdk.aws_apigateway as apigw
+import aws_cdk.aws_dynamodb as dynamodb
+import aws_cdk.aws_route53 as dns
+import aws_cdk.aws_sns as sns
+
 import jsii
 from chalice.cdk import Chalice
 

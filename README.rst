@@ -30,6 +30,9 @@ errors:
 
    $ export MULTIDICT_NO_EXTENSIONS=1
    $ export YARL_NO_EXTENSIONS=1
+   $ export FROZENLIST_NO_EXTENSION=1
+   $ export AIOHTTP_NO_EXTENSIONS=1
+   $ export WRAPT_INSTALL_EXTENSIONS=false
 
 Then, within the ``infrastructure`` directory run ``cdk bootstrap && cdk deploy``.
 

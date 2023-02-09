@@ -41,7 +41,7 @@ async def refresh_data(table, error_topic, logger):
     """
     Update the cached data about software version.
     """
-    headers = {"User-Agent": "Update Checker tool"}
+    headers = {"User-Agent": "Update Checker tool <updatechecker@laker.email>"}
     async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         checks = [checker(session, False) for _, checker in checkers.all_checkers().items()]
         results = await asyncio.gather(*[checker.load() for checker in checks], return_exceptions=True)

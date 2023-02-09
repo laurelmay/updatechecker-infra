@@ -4,8 +4,7 @@ import logging
 import os
 
 import boto3
-from chalice import Chalice, NotFoundError
-from chalice.app import Rate
+from chalice.app import Chalice, NotFoundError, Rate
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
 
